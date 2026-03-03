@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 // Custom debounce hook
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -34,7 +34,7 @@ export default function AdvancedFilter({ columns }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // State
+  // Initialize state from URL
   const [sortBy, setSortBy] = useState(searchParams.get('sort_by') || 'created_datetime_utc');
   const [sortOrder, setSortOrder] = useState(searchParams.get('sort_order') || 'desc');
 
@@ -43,30 +43,64 @@ export default function AdvancedFilter({ columns }: Props) {
 
   const debouncedFilterValue = useDebounceValue(filterValue, 500);
 
-  // Update URL
-  useEffect(() => {
+  // Helper to update URL
+  const updateUrl = useCallback((updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    // Sort
-    params.set('sort_by', sortBy);
-    params.set('sort_order', sortOrder);
-
-    // Filter
-    if (debouncedFilterValue) {
-      params.set('filter_by', filterBy);
-      params.set('filter_value', debouncedFilterValue);
-    } else {
-      params.delete('filter_by');
-      params.delete('filter_value');
-    }
-
-    // Reset page on filter change
-    if (debouncedFilterValue !== (searchParams.get('filter_value') || '')) {
-      params.set('page', '1');
-    }
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
 
     router.replace(`?${params.toString()}`);
-  }, [sortBy, sortOrder, filterBy, debouncedFilterValue, router, searchParams]);
+  }, [searchParams, router]);
+
+  // Handle Sort Change
+  const handleSortChange = (newSortBy: string) => {
+    setSortBy(newSortBy);
+    updateUrl({ sort_by: newSortBy });
+  };
+
+  const handleSortOrderChange = () => {
+    const newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortOrder(newOrder);
+    updateUrl({ sort_order: newOrder });
+  };
+
+  // Handle Filter Column Change
+  const handleFilterByChange = (newFilterBy: string) => {
+    setFilterBy(newFilterBy);
+    setFilterValue(''); // Reset value
+    updateUrl({
+      filter_by: newFilterBy,
+      filter_value: null,
+      page: '1' // Reset page
+    });
+  };
+
+  // Handle Filter Value Change (Debounced)
+  useEffect(() => {
+    // Only update if the value actually changed from what's in the URL
+    const currentUrlValue = searchParams.get('filter_value') || '';
+
+    if (debouncedFilterValue !== currentUrlValue) {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (debouncedFilterValue) {
+        params.set('filter_by', filterBy);
+        params.set('filter_value', debouncedFilterValue);
+      } else {
+        params.delete('filter_by');
+        params.delete('filter_value');
+      }
+
+      params.set('page', '1'); // Reset page on filter change
+      router.replace(`?${params.toString()}`);
+    }
+  }, [debouncedFilterValue, filterBy, router, searchParams]);
 
   const currentFilterColumn = columns.find(c => c.key === filterBy);
 
@@ -82,10 +116,7 @@ export default function AdvancedFilter({ columns }: Props) {
               <select
                 className="block w-full pl-3 pr-10 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
                 value={filterBy}
-                onChange={(e) => {
-                  setFilterBy(e.target.value);
-                  setFilterValue(''); // Reset value on column change
-                }}
+                onChange={(e) => handleFilterByChange(e.target.value)}
               >
                 {columns.map((col) => (
                   <option key={col.key} value={col.key}>{col.label}</option>
@@ -128,7 +159,7 @@ export default function AdvancedFilter({ columns }: Props) {
               <select
                 className="block w-full pl-3 pr-10 py-2.5 text-sm border border-gray-300 bg-gray-50 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
               >
                 {columns.map((col) => (
                   <option key={col.key} value={col.key}>{col.label}</option>
@@ -140,7 +171,7 @@ export default function AdvancedFilter({ columns }: Props) {
             </div>
 
             <button
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              onClick={handleSortOrderChange}
               className="flex items-center justify-center px-4 py-2.5 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-colors min-w-[100px]"
             >
               {sortOrder === 'asc' ? (
