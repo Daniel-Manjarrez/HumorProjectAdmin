@@ -2,15 +2,41 @@ import { requireAdmin } from '@/utils/auth';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import ImageManager from './ImageManager';
+import SearchFilter from '@/components/SearchFilter';
 
-export default async function ImagesPage() {
+export default async function ImagesPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
   await requireAdmin();
   const supabase = await createClient();
+  const params = await searchParams;
 
-  const { data: images, error } = await supabase
-    .from('images')
-    .select('*')
-    .order('created_datetime_utc', { ascending: false });
+  const sort = params.sort || 'newest';
+  const visibility = params.visibility;
+  const usage = params.usage;
+
+  let query = supabase.from('images').select('*');
+
+  // Filter
+  if (visibility === 'public') {
+    query = query.eq('is_public', true);
+  } else if (visibility === 'private') {
+    query = query.eq('is_public', false);
+  }
+
+  if (usage === 'common') {
+    query = query.eq('is_common_use', true);
+  } else if (usage === 'restricted') {
+    query = query.eq('is_common_use', false);
+  }
+
+  // Sort
+  if (sort === 'oldest') {
+    query = query.order('created_datetime_utc', { ascending: true });
+  } else {
+    // Default: newest
+    query = query.order('created_datetime_utc', { ascending: false });
+  }
+
+  const { data: images, error } = await query;
 
   if (error) {
     return <div>Error loading images</div>;
@@ -26,6 +52,31 @@ export default async function ImagesPage() {
         </div>
 
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Manage Images</h1>
+
+        <SearchFilter
+          sortOptions={[
+            { label: 'Newest', value: 'newest' },
+            { label: 'Oldest', value: 'oldest' },
+          ]}
+          filters={[
+            {
+              key: 'visibility',
+              label: 'Visibility',
+              options: [
+                { label: 'Public', value: 'public' },
+                { label: 'Private', value: 'private' },
+              ]
+            },
+            {
+              key: 'usage',
+              label: 'Usage',
+              options: [
+                { label: 'Common Use', value: 'common' },
+                { label: 'Restricted', value: 'restricted' },
+              ]
+            }
+          ]}
+        />
 
         <ImageManager initialImages={images || []} />
       </div>

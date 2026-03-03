@@ -1,15 +1,44 @@
 import { requireAdmin } from '@/utils/auth';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
+import SearchFilter from '@/components/SearchFilter';
 
-export default async function UsersPage() {
+export default async function UsersPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
   await requireAdmin();
   const supabase = await createClient();
+  const params = await searchParams;
 
-  const { data: users, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('created_datetime_utc', { ascending: false });
+  const search = params.search;
+  const sort = params.sort || 'newest';
+  const role = params.role;
+
+  let query = supabase.from('profiles').select('*');
+
+  // Search
+  if (search) {
+    query = query.ilike('email', `%${search}%`);
+  }
+
+  // Filter
+  if (role === 'superadmin') {
+    query = query.eq('is_superadmin', true);
+  } else if (role === 'user') {
+    query = query.eq('is_superadmin', false);
+  }
+
+  // Sort
+  if (sort === 'oldest') {
+    query = query.order('created_datetime_utc', { ascending: true });
+  } else if (sort === 'email_asc') {
+    query = query.order('email', { ascending: true });
+  } else if (sort === 'email_desc') {
+    query = query.order('email', { ascending: false });
+  } else {
+    // Default: newest
+    query = query.order('created_datetime_utc', { ascending: false });
+  }
+
+  const { data: users, error } = await query;
 
   if (error) {
     return <div>Error loading users</div>;
@@ -25,6 +54,26 @@ export default async function UsersPage() {
         </div>
 
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Manage Users</h1>
+
+        <SearchFilter
+          placeholder="Search by email..."
+          sortOptions={[
+            { label: 'Newest', value: 'newest' },
+            { label: 'Oldest', value: 'oldest' },
+            { label: 'Email (A-Z)', value: 'email_asc' },
+            { label: 'Email (Z-A)', value: 'email_desc' },
+          ]}
+          filters={[
+            {
+              key: 'role',
+              label: 'Role',
+              options: [
+                { label: 'Superadmin', value: 'superadmin' },
+                { label: 'User', value: 'user' },
+              ]
+            }
+          ]}
+        />
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">

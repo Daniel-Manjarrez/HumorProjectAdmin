@@ -1,15 +1,36 @@
 import { requireAdmin } from '@/utils/auth';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
+import SearchFilter from '@/components/SearchFilter';
 
-export default async function CaptionsPage() {
+export default async function CaptionsPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
   await requireAdmin();
   const supabase = await createClient();
+  const params = await searchParams;
 
-  const { data: captions, error } = await supabase
-    .from('captions')
-    .select('*')
-    .order('created_datetime_utc', { ascending: false });
+  const search = params.search;
+  const sort = params.sort || 'newest';
+
+  let query = supabase.from('captions').select('*');
+
+  // Search
+  if (search) {
+    query = query.ilike('content', `%${search}%`);
+  }
+
+  // Sort
+  if (sort === 'oldest') {
+    query = query.order('created_datetime_utc', { ascending: true });
+  } else if (sort === 'likes_desc') {
+    query = query.order('like_count', { ascending: false });
+  } else if (sort === 'likes_asc') {
+    query = query.order('like_count', { ascending: true });
+  } else {
+    // Default: newest
+    query = query.order('created_datetime_utc', { ascending: false });
+  }
+
+  const { data: captions, error } = await query;
 
   if (error) {
     return <div>Error loading captions</div>;
@@ -25,6 +46,16 @@ export default async function CaptionsPage() {
         </div>
 
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Manage Captions</h1>
+
+        <SearchFilter
+          placeholder="Search captions..."
+          sortOptions={[
+            { label: 'Newest', value: 'newest' },
+            { label: 'Oldest', value: 'oldest' },
+            { label: 'Most Liked', value: 'likes_desc' },
+            { label: 'Least Liked', value: 'likes_asc' },
+          ]}
+        />
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
