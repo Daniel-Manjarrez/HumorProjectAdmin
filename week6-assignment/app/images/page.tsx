@@ -2,7 +2,7 @@ import { requireAdmin } from '@/utils/auth';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import ImageManager from './ImageManager';
-import SearchFilter from '@/components/SearchFilter';
+import AdvancedFilter from '@/components/AdvancedFilter';
 import Pagination from '@/components/Pagination';
 
 export default async function ImagesPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
@@ -10,36 +10,33 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
   const supabase = await createClient();
   const params = await searchParams;
 
-  const sort = params.sort || 'newest';
-  const visibility = params.visibility;
-  const usage = params.usage;
   const page = parseInt(params.page || '1');
   const limit = 20;
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
+  // Advanced Filter Params
+  const sortBy = params.sort_by || 'created_datetime_utc';
+  const sortOrder = params.sort_order === 'asc';
+  const filterBy = params.filter_by;
+  const filterValue = params.filter_value;
+
   let query = supabase.from('images').select('*', { count: 'exact' });
 
-  // Filter
-  if (visibility === 'public') {
-    query = query.eq('is_public', true);
-  } else if (visibility === 'private') {
-    query = query.eq('is_public', false);
+  // Dynamic Filter
+  if (filterBy && filterValue) {
+    if (filterBy === 'is_public' || filterBy === 'is_common_use') {
+      query = query.eq(filterBy, filterValue === 'true');
+    } else if (filterBy === 'created_datetime_utc') {
+      query = query.ilike(filterBy, `${filterValue}%`);
+    } else {
+      // ID search
+      query = query.eq(filterBy, filterValue); // ID is usually exact match, but could be text
+    }
   }
 
-  if (usage === 'common') {
-    query = query.eq('is_common_use', true);
-  } else if (usage === 'restricted') {
-    query = query.eq('is_common_use', false);
-  }
-
-  // Sort
-  if (sort === 'oldest') {
-    query = query.order('created_datetime_utc', { ascending: true });
-  } else {
-    // Default: newest
-    query = query.order('created_datetime_utc', { ascending: false });
-  }
+  // Dynamic Sort
+  query = query.order(sortBy, { ascending: sortOrder });
 
   // Pagination
   query = query.range(from, to);
@@ -53,6 +50,13 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
   const totalPages = count ? Math.ceil(count / limit) : 0;
   const hasNextPage = page < totalPages;
 
+  const columns = [
+    { key: 'id', label: 'ID', type: 'text' as const },
+    { key: 'is_public', label: 'Public', type: 'boolean' as const },
+    { key: 'is_common_use', label: 'Common Use', type: 'boolean' as const },
+    { key: 'created_datetime_utc', label: 'Created At', type: 'date' as const },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -64,30 +68,7 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
 
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Manage Images</h1>
 
-        <SearchFilter
-          sortOptions={[
-            { label: 'Newest', value: 'newest' },
-            { label: 'Oldest', value: 'oldest' },
-          ]}
-          filters={[
-            {
-              key: 'visibility',
-              label: 'Visibility',
-              options: [
-                { label: 'Public', value: 'public' },
-                { label: 'Private', value: 'private' },
-              ]
-            },
-            {
-              key: 'usage',
-              label: 'Usage',
-              options: [
-                { label: 'Common Use', value: 'common' },
-                { label: 'Restricted', value: 'restricted' },
-              ]
-            }
-          ]}
-        />
+        <AdvancedFilter columns={columns} />
 
         <ImageManager initialImages={images || []} />
 

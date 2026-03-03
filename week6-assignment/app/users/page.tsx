@@ -1,7 +1,7 @@
 import { requireAdmin } from '@/utils/auth';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
-import SearchFilter from '@/components/SearchFilter';
+import AdvancedFilter from '@/components/AdvancedFilter';
 import Pagination from '@/components/Pagination';
 
 export default async function UsersPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
@@ -9,39 +9,34 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const supabase = await createClient();
   const params = await searchParams;
 
-  const search = params.search;
-  const sort = params.sort || 'newest';
-  const role = params.role;
   const page = parseInt(params.page || '1');
   const limit = 20;
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
+  // Advanced Filter Params
+  const sortBy = params.sort_by || 'created_datetime_utc';
+  const sortOrder = params.sort_order === 'asc';
+  const filterBy = params.filter_by;
+  const filterValue = params.filter_value;
+
   let query = supabase.from('profiles').select('*', { count: 'exact' });
 
-  // Search
-  if (search) {
-    query = query.ilike('email', `%${search}%`);
+  // Dynamic Filter
+  if (filterBy && filterValue) {
+    if (filterBy === 'is_superadmin') {
+      query = query.eq(filterBy, filterValue === 'true');
+    } else if (filterBy === 'created_datetime_utc') {
+      // Simple date filtering (starts with)
+      query = query.ilike(filterBy, `${filterValue}%`);
+    } else {
+      // Text search
+      query = query.ilike(filterBy, `%${filterValue}%`);
+    }
   }
 
-  // Filter
-  if (role === 'superadmin') {
-    query = query.eq('is_superadmin', true);
-  } else if (role === 'user') {
-    query = query.eq('is_superadmin', false);
-  }
-
-  // Sort
-  if (sort === 'oldest') {
-    query = query.order('created_datetime_utc', { ascending: true });
-  } else if (sort === 'email_asc') {
-    query = query.order('email', { ascending: true });
-  } else if (sort === 'email_desc') {
-    query = query.order('email', { ascending: false });
-  } else {
-    // Default: newest
-    query = query.order('created_datetime_utc', { ascending: false });
-  }
+  // Dynamic Sort
+  query = query.order(sortBy, { ascending: sortOrder });
 
   // Pagination
   query = query.range(from, to);
@@ -55,6 +50,14 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const totalPages = count ? Math.ceil(count / limit) : 0;
   const hasNextPage = page < totalPages;
 
+  const columns = [
+    { key: 'email', label: 'Email', type: 'text' as const },
+    { key: 'first_name', label: 'First Name', type: 'text' as const },
+    { key: 'last_name', label: 'Last Name', type: 'text' as const },
+    { key: 'is_superadmin', label: 'Superadmin', type: 'boolean' as const },
+    { key: 'created_datetime_utc', label: 'Created At', type: 'date' as const },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -66,25 +69,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
 
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Manage Users</h1>
 
-        <SearchFilter
-          placeholder="Search by email..."
-          sortOptions={[
-            { label: 'Newest', value: 'newest' },
-            { label: 'Oldest', value: 'oldest' },
-            { label: 'Email (A-Z)', value: 'email_asc' },
-            { label: 'Email (Z-A)', value: 'email_desc' },
-          ]}
-          filters={[
-            {
-              key: 'role',
-              label: 'Role',
-              options: [
-                { label: 'Superadmin', value: 'superadmin' },
-                { label: 'User', value: 'user' },
-              ]
-            }
-          ]}
-        />
+        <AdvancedFilter columns={columns} />
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">

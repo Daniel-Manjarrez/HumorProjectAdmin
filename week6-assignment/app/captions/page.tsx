@@ -1,7 +1,7 @@
 import { requireAdmin } from '@/utils/auth';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
-import SearchFilter from '@/components/SearchFilter';
+import AdvancedFilter from '@/components/AdvancedFilter';
 import Pagination from '@/components/Pagination';
 
 export default async function CaptionsPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
@@ -9,31 +9,35 @@ export default async function CaptionsPage({ searchParams }: { searchParams: Pro
   const supabase = await createClient();
   const params = await searchParams;
 
-  const search = params.search;
-  const sort = params.sort || 'newest';
   const page = parseInt(params.page || '1');
   const limit = 20;
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
+  // Advanced Filter Params
+  const sortBy = params.sort_by || 'created_datetime_utc';
+  const sortOrder = params.sort_order === 'asc';
+  const filterBy = params.filter_by;
+  const filterValue = params.filter_value;
+
   let query = supabase.from('captions').select('*', { count: 'exact' });
 
-  // Search
-  if (search) {
-    query = query.ilike('content', `%${search}%`);
+  // Dynamic Filter
+  if (filterBy && filterValue) {
+    if (filterBy === 'like_count') {
+      query = query.eq(filterBy, parseInt(filterValue));
+    } else if (filterBy === 'created_datetime_utc') {
+      query = query.ilike(filterBy, `${filterValue}%`);
+    } else if (filterBy === 'profile_id' || filterBy === 'image_id') {
+      query = query.eq(filterBy, filterValue);
+    } else {
+      // Content search
+      query = query.ilike(filterBy, `%${filterValue}%`);
+    }
   }
 
-  // Sort
-  if (sort === 'oldest') {
-    query = query.order('created_datetime_utc', { ascending: true });
-  } else if (sort === 'likes_desc') {
-    query = query.order('like_count', { ascending: false });
-  } else if (sort === 'likes_asc') {
-    query = query.order('like_count', { ascending: true });
-  } else {
-    // Default: newest
-    query = query.order('created_datetime_utc', { ascending: false });
-  }
+  // Dynamic Sort
+  query = query.order(sortBy, { ascending: sortOrder });
 
   // Pagination
   query = query.range(from, to);
@@ -47,6 +51,14 @@ export default async function CaptionsPage({ searchParams }: { searchParams: Pro
   const totalPages = count ? Math.ceil(count / limit) : 0;
   const hasNextPage = page < totalPages;
 
+  const columns = [
+    { key: 'content', label: 'Content', type: 'text' as const },
+    { key: 'like_count', label: 'Likes', type: 'number' as const },
+    { key: 'profile_id', label: 'Profile ID', type: 'text' as const },
+    { key: 'image_id', label: 'Image ID', type: 'text' as const },
+    { key: 'created_datetime_utc', label: 'Created At', type: 'date' as const },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -58,15 +70,7 @@ export default async function CaptionsPage({ searchParams }: { searchParams: Pro
 
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Manage Captions</h1>
 
-        <SearchFilter
-          placeholder="Search captions..."
-          sortOptions={[
-            { label: 'Newest', value: 'newest' },
-            { label: 'Oldest', value: 'oldest' },
-            { label: 'Most Liked', value: 'likes_desc' },
-            { label: 'Least Liked', value: 'likes_asc' },
-          ]}
-        />
+        <AdvancedFilter columns={columns} />
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
