@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/utils/auth';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
+import ImageManager from './ImageManager';
 
 export default async function ImagesPage() {
   await requireAdmin();
@@ -26,25 +27,7 @@ export default async function ImagesPage() {
 
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Manage Images</h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {images?.map((image) => (
-            <div key={image.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
-                {image.url ? (
-                  <img src={image.url} alt="Uploaded" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-gray-400">No URL</span>
-                )}
-              </div>
-              <div className="p-4">
-                <p className="text-xs text-gray-500 truncate">ID: {image.id}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {new Date(image.created_datetime_utc).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ImageManager initialImages={images || []} />
       </div>
     </div>
   );

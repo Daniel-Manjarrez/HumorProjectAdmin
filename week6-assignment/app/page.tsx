@@ -2,6 +2,7 @@ import { requireAdmin } from '@/utils/auth';
 import Link from 'next/link';
 import CardShuffle from '@/components/CardShuffle';
 import { getStats } from '@/app/stats/actions';
+import SignOutButton from '@/components/SignOutButton';
 
 export default async function Dashboard() {
   const user = await requireAdmin();
@@ -38,6 +39,7 @@ export default async function Dashboard() {
             >
               Manage Captions
             </Link>
+            <SignOutButton />
           </div>
         </div>
 
