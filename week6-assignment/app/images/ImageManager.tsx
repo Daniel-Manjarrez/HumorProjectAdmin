@@ -22,10 +22,17 @@ export default function ImageManager({ initialImages }: { initialImages: Image[]
     try {
       // 1. Get URL
       let contentType = file.type
+
+      // Handle HEIC/HEIF files which might have empty file.type in some browsers
       if (!contentType) {
-         if (file.name.toLowerCase().endsWith('.heic')) contentType = 'image/heic'
+        const name = file.name.toLowerCase()
+        if (name.endsWith('.heic')) contentType = 'image/heic'
+        else if (name.endsWith('.heif')) contentType = 'image/heif'
       }
-      if (!contentType) throw new Error('Unknown file type')
+
+      if (!contentType) {
+        throw new Error('Could not determine file type. Please try a different image.')
+      }
 
       const { presignedUrl, cdnUrl } = await getPresignedUrl(contentType)
 
@@ -81,11 +88,11 @@ export default function ImageManager({ initialImages }: { initialImages: Image[]
               className="hidden"
               onChange={handleUpload}
               disabled={uploading}
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
             />
           </label>
           <span className="text-sm text-gray-500">
-            Supported: JPG, PNG, WEBP, GIF
+            Supported: JPG, PNG, WEBP, GIF, HEIC
           </span>
         </div>
       </div>
