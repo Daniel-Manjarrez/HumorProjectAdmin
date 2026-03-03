@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import ImageManager from './ImageManager';
 import SearchFilter from '@/components/SearchFilter';
+import Pagination from '@/components/Pagination';
 
 export default async function ImagesPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
   await requireAdmin();
@@ -12,8 +13,12 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
   const sort = params.sort || 'newest';
   const visibility = params.visibility;
   const usage = params.usage;
+  const page = parseInt(params.page || '1');
+  const limit = 20;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
-  let query = supabase.from('images').select('*');
+  let query = supabase.from('images').select('*', { count: 'exact' });
 
   // Filter
   if (visibility === 'public') {
@@ -36,11 +41,17 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
     query = query.order('created_datetime_utc', { ascending: false });
   }
 
-  const { data: images, error } = await query;
+  // Pagination
+  query = query.range(from, to);
+
+  const { data: images, count, error } = await query;
 
   if (error) {
     return <div>Error loading images</div>;
   }
+
+  const totalPages = count ? Math.ceil(count / limit) : 0;
+  const hasNextPage = page < totalPages;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -79,6 +90,8 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
         />
 
         <ImageManager initialImages={images || []} />
+
+        <Pagination page={page} totalPages={totalPages} hasNextPage={hasNextPage} />
       </div>
     </div>
   );

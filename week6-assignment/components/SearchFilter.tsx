@@ -52,7 +52,7 @@ export default function SearchFilter({ placeholder = 'Search...', sortOptions = 
     } else {
       params.delete('search');
     }
-    router.push(`?${params.toString()}`);
+    router.replace(`?${params.toString()}`);
   }, [debouncedSearch, router, searchParams]);
 
   const handleSortChange = (value: string) => {
@@ -62,7 +62,7 @@ export default function SearchFilter({ placeholder = 'Search...', sortOptions = 
     } else {
       params.delete('sort');
     }
-    router.push(`?${params.toString()}`);
+    router.replace(`?${params.toString()}`);
   };
 
   const handleFilterChange = (key: string, value: string) => {
@@ -72,7 +72,7 @@ export default function SearchFilter({ placeholder = 'Search...', sortOptions = 
     } else {
       params.delete(key);
     }
-    router.push(`?${params.toString()}`);
+    router.replace(`?${params.toString()}`);
   };
 
   return (

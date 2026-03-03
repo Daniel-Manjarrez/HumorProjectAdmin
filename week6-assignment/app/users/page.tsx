@@ -2,6 +2,7 @@ import { requireAdmin } from '@/utils/auth';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import SearchFilter from '@/components/SearchFilter';
+import Pagination from '@/components/Pagination';
 
 export default async function UsersPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
   await requireAdmin();
@@ -11,8 +12,12 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const search = params.search;
   const sort = params.sort || 'newest';
   const role = params.role;
+  const page = parseInt(params.page || '1');
+  const limit = 20;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
-  let query = supabase.from('profiles').select('*');
+  let query = supabase.from('profiles').select('*', { count: 'exact' });
 
   // Search
   if (search) {
@@ -38,11 +43,17 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
     query = query.order('created_datetime_utc', { ascending: false });
   }
 
-  const { data: users, error } = await query;
+  // Pagination
+  query = query.range(from, to);
+
+  const { data: users, count, error } = await query;
 
   if (error) {
     return <div>Error loading users</div>;
   }
+
+  const totalPages = count ? Math.ceil(count / limit) : 0;
+  const hasNextPage = page < totalPages;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -121,6 +132,8 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
             </tbody>
           </table>
         </div>
+
+        <Pagination page={page} totalPages={totalPages} hasNextPage={hasNextPage} />
       </div>
     </div>
   );
