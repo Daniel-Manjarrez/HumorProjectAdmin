@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { getPresignedUrl, registerImage, updateImage, deleteImage } from './actions'
+import Link from 'next/link'
 
 type Image = {
   id: string
@@ -102,15 +103,17 @@ export default function ImageManager({ initialImages }: { initialImages: Image[]
           <div key={image.id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 flex flex-col">
             <div className="h-48 bg-gray-100 flex items-center justify-center overflow-hidden relative group">
               {image.url ? (
-                <img src={image.url} alt="Uploaded" className="w-full h-full object-cover" />
+                <Link href={`/images/${image.id}`} className="w-full h-full block">
+                  <img src={image.url} alt="Uploaded" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                </Link>
               ) : (
                 <span className="text-gray-400">No URL</span>
               )}
 
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => handleDelete(image.id)}
-                  className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700"
+                  className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 shadow-sm"
                 >
                   Delete
                 </button>
@@ -119,7 +122,9 @@ export default function ImageManager({ initialImages }: { initialImages: Image[]
 
             <div className="p-4 flex-grow flex flex-col justify-between">
               <div>
-                <p className="text-xs text-gray-500 truncate mb-2 font-mono">ID: {image.id}</p>
+                <Link href={`/images/${image.id}`} className="block hover:text-blue-600 transition-colors">
+                  <p className="text-xs text-gray-500 truncate mb-2 font-mono">ID: {image.id}</p>
+                </Link>
                 <p className="text-xs text-gray-500 mb-4">
                   {new Date(image.created_datetime_utc).toLocaleDateString()}
                 </p>

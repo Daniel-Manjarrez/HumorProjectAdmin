@@ -34,16 +34,34 @@ export default async function CaptionsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profile ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {captions?.map((caption) => (
-                <tr key={caption.id}>
-                  <td className="px-6 py-4 text-sm text-gray-900">{caption.content}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate">{caption.profile_id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate">{caption.image_id}</td>
+                <tr key={caption.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <Link href={`/captions/${caption.id}`} className="hover:text-blue-600">
+                      {caption.content.length > 50 ? `${caption.content.substring(0, 50)}...` : caption.content}
+                    </Link>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">
+                    <Link href={`/users/${caption.profile_id}`} className="hover:text-blue-600">
+                      {caption.profile_id}
+                    </Link>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">
+                    <Link href={`/images/${caption.image_id}`} className="hover:text-blue-600">
+                      {caption.image_id}
+                    </Link>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(caption.created_datetime_utc).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <Link href={`/captions/${caption.id}`} className="text-blue-600 hover:text-blue-900">
+                      View
+                    </Link>
                   </td>
                 </tr>
               ))}

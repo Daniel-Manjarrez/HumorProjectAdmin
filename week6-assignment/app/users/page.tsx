@@ -35,12 +35,17 @@ export default async function UsersPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Superadmin</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {users?.map((user) => (
-                <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
+                <tr key={user.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                    <Link href={`/users/${user.id}`}>
+                      {user.email}
+                    </Link>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.first_name || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.last_name || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -56,6 +61,11 @@ export default async function UsersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(user.created_datetime_utc).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <Link href={`/users/${user.id}`} className="text-blue-600 hover:text-blue-900">
+                      View
+                    </Link>
                   </td>
                 </tr>
               ))}
