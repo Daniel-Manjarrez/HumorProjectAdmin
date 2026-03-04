@@ -9,6 +9,10 @@ export default function LoginButton() {
       provider: 'google',
       options: {
         redirectTo: `${location.origin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account',
+        },
       },
     });
   };
