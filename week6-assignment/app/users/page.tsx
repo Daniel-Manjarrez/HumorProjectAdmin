@@ -14,28 +14,36 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  // Advanced Filter Params
+  // Sort
   const sortBy = params.sort_by || 'created_datetime_utc';
   const sortOrder = params.sort_order === 'asc';
-  const filterBy = params.filter_by;
-  const filterValue = params.filter_value;
 
   let query = supabase.from('profiles').select('*', { count: 'exact' });
 
-  // Dynamic Filter
-  if (filterBy && filterValue) {
-    if (filterBy === 'is_superadmin') {
-      query = query.eq(filterBy, filterValue === 'true');
-    } else if (filterBy === 'created_datetime_utc') {
-      // Simple date filtering (starts with)
-      query = query.ilike(filterBy, `${filterValue}%`);
-    } else {
-      // Text search
-      query = query.ilike(filterBy, `%${filterValue}%`);
-    }
-  }
+  // Dynamic Filters
+  // We iterate through known columns to see if they exist in params
+  const columns = [
+    { key: 'email', label: 'Email', type: 'text' as const },
+    { key: 'first_name', label: 'First Name', type: 'text' as const },
+    { key: 'last_name', label: 'Last Name', type: 'text' as const },
+    { key: 'is_superadmin', label: 'Superadmin', type: 'boolean' as const },
+    { key: 'created_datetime_utc', label: 'Created At', type: 'date' as const },
+  ];
 
-  // Dynamic Sort
+  columns.forEach(col => {
+    const value = params[col.key];
+    if (value) {
+      if (col.type === 'boolean') {
+        query = query.eq(col.key, value === 'true');
+      } else if (col.type === 'date') {
+        query = query.ilike(col.key, `${value}%`);
+      } else {
+        query = query.ilike(col.key, `%${value}%`);
+      }
+    }
+  });
+
+  // Sort
   query = query.order(sortBy, { ascending: sortOrder });
 
   // Pagination
@@ -49,14 +57,6 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
 
   const totalPages = count ? Math.ceil(count / limit) : 0;
   const hasNextPage = page < totalPages;
-
-  const columns = [
-    { key: 'email', label: 'Email', type: 'text' as const },
-    { key: 'first_name', label: 'First Name', type: 'text' as const },
-    { key: 'last_name', label: 'Last Name', type: 'text' as const },
-    { key: 'is_superadmin', label: 'Superadmin', type: 'boolean' as const },
-    { key: 'created_datetime_utc', label: 'Created At', type: 'date' as const },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
