@@ -2,6 +2,7 @@ import { requireAdmin } from '@/utils/auth';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import BackButton from '@/components/BackButton';
 
 export default async function CaptionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -40,9 +41,7 @@ export default async function CaptionDetailPage({ params }: { params: Promise<{ 
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <Link href="/captions" className="text-blue-600 hover:text-blue-800 flex items-center gap-2">
-            ← Back to Captions
-          </Link>
+          <BackButton fallbackUrl="/captions" label="Back to Captions" />
         </div>
 
         <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
