@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import SignOutButton from '@/components/SignOutButton';
 
 export default function UnauthorizedPage() {
   return (
@@ -8,12 +8,9 @@ export default function UnauthorizedPage() {
         <p className="text-gray-600">
           You do not have permission to access this page.
         </p>
-        <Link
-          href="/"
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors"
-        >
-          Go Home
-        </Link>
+        <div className="flex justify-center">
+          <SignOutButton />
+        </div>
       </div>
     </div>
   );
