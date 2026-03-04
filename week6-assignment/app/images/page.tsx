@@ -29,9 +29,12 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
       query = query.eq(filterBy, filterValue === 'true');
     } else if (filterBy === 'created_datetime_utc') {
       query = query.ilike(filterBy, `${filterValue}%`);
+    } else if (filterBy === 'profile_id' || filterBy === 'id') {
+      // Exact match for IDs
+      query = query.eq(filterBy, filterValue);
     } else {
-      // ID search
-      query = query.eq(filterBy, filterValue); // ID is usually exact match, but could be text
+      // Fallback text search
+      query = query.ilike(filterBy, `%${filterValue}%`);
     }
   }
 
@@ -52,6 +55,7 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
 
   const columns = [
     { key: 'id', label: 'ID', type: 'text' as const },
+    { key: 'profile_id', label: 'Profile ID', type: 'text' as const },
     { key: 'is_public', label: 'Public', type: 'boolean' as const },
     { key: 'is_common_use', label: 'Common Use', type: 'boolean' as const },
     { key: 'created_datetime_utc', label: 'Created At', type: 'date' as const },
