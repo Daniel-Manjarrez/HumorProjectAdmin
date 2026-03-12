@@ -16,7 +16,7 @@ export default async function Page() {
 
   const columns: ColumnDef[] = [
     { key: 'id', label: 'ID', type: 'number', editable: false },
-    { key: 'email', label: 'Email', type: 'text', required: true },
+    { key: 'email_address', label: 'Email', type: 'text', required: true },
     { key: 'created_datetime_utc', label: 'Created At', type: 'datetime', editable: false },
   ];
 
