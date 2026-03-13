@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { createResource, updateResource, deleteResource } from '@/app/resources/actions'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import AdvancedFilter from '@/components/AdvancedFilter'
+import Pagination from '@/components/Pagination'
 
 export type ColumnDef = {
   key: string
@@ -18,10 +20,23 @@ type Props = {
   title: string
   columns: ColumnDef[]
   initialData: any[]
-  basePath?: string // Optional base path for detail view (e.g., "/humor-flavors")
+  basePath?: string
+  // Pagination Props
+  page: number
+  totalPages: number
+  hasNextPage: boolean
 }
 
-export default function ResourceManager({ tableName, title, columns, initialData, basePath }: Props) {
+export default function ResourceManager({
+  tableName,
+  title,
+  columns,
+  initialData,
+  basePath,
+  page,
+  totalPages,
+  hasNextPage
+}: Props) {
   const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<any | null>(null)
@@ -56,7 +71,6 @@ export default function ResourceManager({ tableName, title, columns, initialData
     setLoading(true)
 
     try {
-      // Filter out non-editable columns for create/update payload
       const payload: any = {}
       columns.forEach(col => {
         if (col.editable !== false && formData[col.key] !== undefined) {
@@ -64,12 +78,10 @@ export default function ResourceManager({ tableName, title, columns, initialData
         }
       })
 
-      // Convert types if needed (e.g. number strings to numbers)
       columns.forEach(col => {
         if (col.type === 'number' && payload[col.key]) {
           payload[col.key] = Number(payload[col.key])
         }
-        // Handle boolean selects
         if (col.type === 'boolean' && typeof payload[col.key] === 'string') {
            payload[col.key] = payload[col.key] === 'true'
         }
@@ -97,7 +109,7 @@ export default function ResourceManager({ tableName, title, columns, initialData
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
         <button
           onClick={handleOpenCreate}
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors shadow-sm font-medium"
@@ -105,6 +117,12 @@ export default function ResourceManager({ tableName, title, columns, initialData
           Add New
         </button>
       </div>
+
+      <AdvancedFilter columns={columns.map(c => ({
+        key: c.key,
+        label: c.label,
+        type: c.type === 'datetime' ? 'date' : c.type === 'textarea' ? 'text' : c.type
+      }))} />
 
       <div className="bg-white shadow-md rounded-lg overflow-x-auto border border-gray-200">
         <table className="min-w-full divide-y divide-gray-200">
@@ -138,7 +156,10 @@ export default function ResourceManager({ tableName, title, columns, initialData
                     ) : col.type === 'datetime' ? (
                       new Date(item[col.key]).toLocaleDateString()
                     ) : (
-                      String(item[col.key] ?? '-')
+                      // Truncate long text
+                      String(item[col.key] ?? '-').length > 50
+                        ? String(item[col.key]).substring(0, 50) + '...'
+                        : String(item[col.key] ?? '-')
                     )}
                   </td>
                 ))}
@@ -176,6 +197,8 @@ export default function ResourceManager({ tableName, title, columns, initialData
           </tbody>
         </table>
       </div>
+
+      <Pagination page={page} totalPages={totalPages} hasNextPage={hasNextPage} />
 
       {/* Modal */}
       {isModalOpen && (
