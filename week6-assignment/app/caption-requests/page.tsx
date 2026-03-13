@@ -32,6 +32,7 @@ export default async function Page() {
           title="Caption Requests"
           columns={columns}
           initialData={data || []}
+          basePath="/caption-requests"
         />
       </div>
     </div>

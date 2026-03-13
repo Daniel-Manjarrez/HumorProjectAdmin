@@ -31,6 +31,7 @@ export default async function Page() {
           title="Allowed Signup Domains"
           columns={columns}
           initialData={data || []}
+          basePath="/signup-domains"
         />
       </div>
     </div>

@@ -35,6 +35,7 @@ export default async function Page() {
           title="Terms"
           columns={columns}
           initialData={data || []}
+          basePath="/terms"
         />
       </div>
     </div>

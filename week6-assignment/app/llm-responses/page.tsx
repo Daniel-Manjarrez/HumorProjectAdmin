@@ -34,6 +34,7 @@ export default async function Page() {
           title="LLM Responses"
           columns={columns}
           initialData={data || []}
+          basePath="/llm-responses"
         />
       </div>
     </div>

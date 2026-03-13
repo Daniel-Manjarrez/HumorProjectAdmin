@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createResource, updateResource, deleteResource } from '@/app/resources/actions'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export type ColumnDef = {
   key: string
@@ -17,9 +18,10 @@ type Props = {
   title: string
   columns: ColumnDef[]
   initialData: any[]
+  basePath?: string // Optional base path for detail view (e.g., "/humor-flavors")
 }
 
-export default function ResourceManager({ tableName, title, columns, initialData }: Props) {
+export default function ResourceManager({ tableName, title, columns, initialData, basePath }: Props) {
   const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<any | null>(null)
@@ -123,15 +125,28 @@ export default function ResourceManager({ tableName, title, columns, initialData
               <tr key={item.id} className="hover:bg-gray-50">
                 {columns.map(col => (
                   <td key={col.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {col.type === 'boolean'
-                      ? (item[col.key] ? 'Yes' : 'No')
-                      : col.type === 'datetime'
-                        ? new Date(item[col.key]).toLocaleDateString()
-                        : String(item[col.key] ?? '-')
-                    }
+                    {basePath && col.key === columns[0].key ? (
+                      <Link href={`${basePath}/${item.id}`} className="text-blue-600 hover:text-blue-900 font-medium">
+                        {String(item[col.key] ?? '-')}
+                      </Link>
+                    ) : col.type === 'boolean' ? (
+                      (item[col.key] ? 'Yes' : 'No')
+                    ) : col.type === 'datetime' ? (
+                      new Date(item[col.key]).toLocaleDateString()
+                    ) : (
+                      String(item[col.key] ?? '-')
+                    )}
                   </td>
                 ))}
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                  {basePath && (
+                    <Link
+                      href={`${basePath}/${item.id}`}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      View
+                    </Link>
+                  )}
                   <button
                     onClick={() => handleOpenEdit(item)}
                     className="text-indigo-600 hover:text-indigo-900"

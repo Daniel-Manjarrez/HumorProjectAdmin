@@ -31,6 +31,7 @@ export default async function Page() {
           title="LLM Providers"
           columns={columns}
           initialData={data || []}
+          basePath="/llm-providers"
         />
       </div>
     </div>

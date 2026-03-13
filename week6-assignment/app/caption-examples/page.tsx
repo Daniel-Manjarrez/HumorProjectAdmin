@@ -35,6 +35,7 @@ export default async function Page() {
           title="Caption Examples"
           columns={columns}
           initialData={data || []}
+          basePath="/caption-examples"
         />
       </div>
     </div>

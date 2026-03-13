@@ -31,6 +31,7 @@ export default async function Page() {
           title="Whitelist Emails"
           columns={columns}
           initialData={data || []}
+          basePath="/whitelist-emails"
         />
       </div>
     </div>

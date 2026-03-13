@@ -32,6 +32,7 @@ export default async function Page() {
           title="Humor Flavors"
           columns={columns}
           initialData={data || []}
+          basePath="/humor-flavors"
         />
       </div>
     </div>

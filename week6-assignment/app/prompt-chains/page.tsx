@@ -31,6 +31,7 @@ export default async function Page() {
           title="LLM Prompt Chains"
           columns={columns}
           initialData={data || []}
+          basePath="/prompt-chains"
         />
       </div>
     </div>
