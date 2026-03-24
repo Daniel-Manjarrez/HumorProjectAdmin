@@ -15,37 +15,33 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  // Sort
+  // Advanced Filter Params
   const sortBy = params.sort_by || 'created_datetime_utc';
   const sortOrder = params.sort_order === 'asc';
+  const filterBy = params.filter_by;
+  const filterValue = params.filter_value;
 
   let query = supabase.from('images').select('*', { count: 'exact' });
 
-  // Dynamic Filters
-  const columns = [
-    { key: 'id', label: 'ID', type: 'text' as const },
-    { key: 'profile_id', label: 'Profile ID', type: 'text' as const },
-    { key: 'is_public', label: 'Public', type: 'boolean' as const },
-    { key: 'is_common_use', label: 'Common Use', type: 'boolean' as const },
-    { key: 'created_datetime_utc', label: 'Created At', type: 'date' as const },
-  ];
-
-  columns.forEach(col => {
-    const value = params[col.key];
-    if (value) {
-      if (col.type === 'boolean') {
-        query = query.eq(col.key, value === 'true');
-      } else if (col.type === 'date') {
-        query = query.ilike(col.key, `${value}%`);
-      } else if (col.key === 'id' || col.key === 'profile_id') {
-        query = query.eq(col.key, value);
-      } else {
-        query = query.ilike(col.key, `%${value}%`);
+  // Dynamic Filter
+  if (filterBy && filterValue) {
+    if (filterBy === 'is_public' || filterBy === 'is_common_use') {
+      query = query.eq(filterBy, filterValue === 'true');
+    } else if (filterBy === 'created_datetime_utc') {
+      const dateVal = new Date(filterValue);
+      if (!isNaN(dateVal.getTime())) {
+         query = query.gte(filterBy, dateVal.toISOString());
       }
+    } else if (filterBy === 'profile_id' || filterBy === 'id') {
+      // Exact match for IDs
+      query = query.eq(filterBy, filterValue);
+    } else {
+      // Fallback text search
+      query = query.ilike(filterBy, `%${filterValue}%`);
     }
-  });
+  }
 
-  // Sort
+  // Dynamic Sort
   query = query.order(sortBy, { ascending: sortOrder });
 
   // Pagination
@@ -59,6 +55,14 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
 
   const totalPages = count ? Math.ceil(count / limit) : 0;
   const hasNextPage = page < totalPages;
+
+  const columns = [
+    { key: 'id', label: 'ID', type: 'text' as const },
+    { key: 'profile_id', label: 'Profile ID', type: 'text' as const },
+    { key: 'is_public', label: 'Public', type: 'boolean' as const },
+    { key: 'is_common_use', label: 'Common Use', type: 'boolean' as const },
+    { key: 'created_datetime_utc', label: 'Created At', type: 'date' as const },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

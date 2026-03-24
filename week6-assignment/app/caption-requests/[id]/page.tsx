@@ -13,10 +13,10 @@ export default async function CaptionRequestDetailPage({ params }: { params: Pro
     .from('caption_requests')
     .select(`
       *,
-      profiles (
+      profiles!profile_id (
         email
       ),
-      images (
+      images!image_id (
         url
       )
     `)
@@ -24,6 +24,7 @@ export default async function CaptionRequestDetailPage({ params }: { params: Pro
     .single();
 
   if (error || !request) {
+    if (error) console.error("Error fetching caption request detail:", error);
     notFound();
   }
 

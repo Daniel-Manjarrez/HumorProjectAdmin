@@ -13,10 +13,10 @@ export default async function CaptionDetailPage({ params }: { params: Promise<{ 
     .from('captions')
     .select(`
       *,
-      images (
+      images!image_id (
         url
       ),
-      profiles (
+      profiles!profile_id (
         email
       )
     `)
@@ -24,6 +24,9 @@ export default async function CaptionDetailPage({ params }: { params: Promise<{ 
     .single();
 
   if (error || !caption) {
+    if (error) {
+       console.error("Failed to fetch caption details", error)
+    }
     notFound();
   }
 

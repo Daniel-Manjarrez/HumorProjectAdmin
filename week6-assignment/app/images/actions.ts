@@ -65,9 +65,19 @@ export async function registerImage(cdnUrl: string) {
 export async function updateImage(id: string, updates: { is_public?: boolean, is_common_use?: boolean }) {
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('User not authenticated')
+  }
+
   const { error } = await supabase
     .from('images')
-    .update(updates)
+    .update({
+      ...updates,
+      modified_datetime_utc: new Date().toISOString(),
+      modified_by_user_id: user.id
+    })
     .eq('id', id)
 
   if (error) {

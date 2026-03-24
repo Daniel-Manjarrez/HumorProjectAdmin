@@ -36,7 +36,10 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
       if (col.type === 'boolean') {
         query = query.eq(col.key, value === 'true');
       } else if (col.type === 'date') {
-        query = query.ilike(col.key, `${value}%`);
+        const dateVal = new Date(value);
+        if (!isNaN(dateVal.getTime())) {
+           query = query.gte(col.key, dateVal.toISOString());
+        }
       } else {
         query = query.ilike(col.key, `%${value}%`);
       }

@@ -25,19 +25,34 @@ export async function fetchResource(
       if (col.type === 'boolean') {
         query = query.eq(col.key, value === 'true');
       } else if (col.type === 'datetime') {
-        query = query.ilike(col.key, `${value}%`);
+        // To prevent 42883 errors when users type partial strings like "2025" into a datetime filter,
+        // we check if it can be parsed as a valid date.
+        // If it's just a year "2025", new Date("2025") is valid.
+        const dateVal = new Date(value);
+        if (!isNaN(dateVal.getTime())) {
+           // It's a valid date string. Let's do a loose bounds check for that day/year.
+           // For simplicity in a generic filter, we just use gte (greater than or equal).
+           // This means searching "2025-01-01" will show everything AFTER that date.
+           query = query.gte(col.key, dateVal.toISOString());
+        }
       } else if (col.type === 'number') {
         // Exact match for numbers (IDs, counts)
-        query = query.eq(col.key, value);
+        if (!isNaN(Number(value))) {
+          query = query.eq(col.key, Number(value));
+        }
       } else {
-        // Text search
-        query = query.ilike(col.key, `%${value}%`);
+        // Text search (UUIDs don't work with ILIKE in Postgres, must use EQ or cast)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(value)) {
+          query = query.eq(col.key, value);
+        } else {
+          query = query.ilike(col.key, `%${value}%`);
+        }
       }
     }
   });
 
   // Sort
-  // Check if sort column exists in definition to avoid errors, or assume client sent valid one
   query = query.order(sortBy, { ascending: sortOrder });
 
   // Pagination
@@ -45,7 +60,10 @@ export async function fetchResource(
 
   const { data, count, error } = await query;
 
-  if (error) throw error;
+  if (error) {
+    console.error("Fetch Resource Error:", error);
+    throw error;
+  }
 
   const totalPages = count ? Math.ceil(count / limit) : 0;
   const hasNextPage = page < totalPages;

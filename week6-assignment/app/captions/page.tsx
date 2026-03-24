@@ -35,7 +35,10 @@ export default async function CaptionsPage({ searchParams }: { searchParams: Pro
       if (col.type === 'number') {
         query = query.eq(col.key, parseInt(value));
       } else if (col.type === 'date') {
-        query = query.ilike(col.key, `${value}%`);
+        const dateVal = new Date(value);
+        if (!isNaN(dateVal.getTime())) {
+           query = query.gte(col.key, dateVal.toISOString());
+        }
       } else if (col.key === 'profile_id' || col.key === 'image_id') {
         query = query.eq(col.key, value);
       } else {
