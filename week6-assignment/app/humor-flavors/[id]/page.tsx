@@ -2,6 +2,8 @@ import { requireAdmin } from '@/utils/auth';
 import { createClient } from '@/utils/supabase/server';
 import { notFound } from 'next/navigation';
 import BackButton from '@/components/BackButton';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import SignOutButton from '@/components/SignOutButton';
 
 export default async function HumorFlavorDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -19,39 +21,43 @@ export default async function HumorFlavorDetailPage({ params }: { params: Promis
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
+      <div className="max-w-3xl mx-auto relative pt-8">
+        <div className="absolute -top-8 right-0 flex items-center gap-4 z-10">
+          <ThemeToggle />
+          <SignOutButton />
+        </div>
         <div className="mb-8">
           <BackButton fallbackUrl="/humor-flavors" label="Back to Humor Flavors" />
         </div>
 
-        <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Humor Flavor Details</h1>
-            <p className="text-sm text-gray-500 font-mono mt-1">ID: {flavor.id}</p>
+        <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 transition-colors">
+          <div className="bg-gray-50 dark:bg-gray-900/50 px-6 py-4 border-b border-gray-200 dark:border-gray-700 transition-colors">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Humor Flavor Details</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-mono mt-1">ID: {flavor.id}</p>
           </div>
 
           <div className="p-6 space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-500">Slug</label>
-              <p className="mt-1 text-lg text-gray-900 font-mono bg-gray-50 p-2 rounded">{flavor.slug}</p>
+              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Slug</label>
+              <p className="mt-1 text-lg text-gray-900 dark:text-white font-mono bg-gray-50 dark:bg-gray-900/50 p-2 rounded transition-colors">{flavor.slug}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-500">Description</label>
-              <p className="mt-1 text-lg text-gray-900">{flavor.description}</p>
+              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Description</label>
+              <p className="mt-1 text-lg text-gray-900 dark:text-white">{flavor.description}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-500">Created At</label>
-              <p className="mt-1 text-lg text-gray-900">
+              <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Created At</label>
+              <p className="mt-1 text-lg text-gray-900 dark:text-white">
                 {new Date(flavor.created_datetime_utc).toLocaleString()}
               </p>
             </div>
 
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Raw Data</h3>
-              <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Raw Data</h3>
+              <pre className="bg-gray-900 text-gray-100 dark:bg-gray-950 dark:text-gray-300 p-4 rounded-lg overflow-x-auto text-sm transition-colors">
                 {JSON.stringify(flavor, null, 2)}
               </pre>
             </div>

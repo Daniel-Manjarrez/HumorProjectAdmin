@@ -3,6 +3,8 @@ import { createClient } from '@/utils/supabase/server';
 import { notFound } from 'next/navigation';
 import BackButton from '@/components/BackButton';
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import SignOutButton from '@/components/SignOutButton';
 
 export default async function LLMResponseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -19,148 +21,146 @@ export default async function LLMResponseDetailPage({ params }: { params: Promis
     notFound();
   }
 
-  // Parse response
-  let parsedCaptions: string[] = [];
+  // Try to parse the response if it looks like JSON
+  let parsedResponse = null;
+  let usage = null;
+  let finishReason = null;
+
   try {
-    if (response.llm_model_response) {
-      const parsed = JSON.parse(response.llm_model_response);
-      if (Array.isArray(parsed)) {
-        parsedCaptions = parsed;
-      } else if (parsed.choices?.[0]?.message?.content) {
-        // Handle provider format if not already unwrapped
-        try {
-          parsedCaptions = JSON.parse(parsed.choices[0].message.content);
-        } catch {
-          parsedCaptions = [parsed.choices[0].message.content];
-        }
-      }
+    if (response.llm_model_response && (response.llm_model_response.startsWith('{') || response.llm_model_response.startsWith('['))) {
+      parsedResponse = JSON.parse(response.llm_model_response);
+
+      // Common locations for usage stats (OpenAI/Anthropic style)
+      usage = parsedResponse.usage || parsedResponse.token_usage;
+      finishReason = parsedResponse.finish_reason || parsedResponse.choices?.[0]?.finish_reason;
     }
   } catch (e) {
-    // raw string
+    // Not valid JSON, ignore
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
+      <div className="max-w-4xl mx-auto relative pt-8">
+        <div className="absolute -top-8 right-0 flex items-center gap-4 z-10">
+          <ThemeToggle />
+          <SignOutButton />
+        </div>
         <div className="mb-8">
           <BackButton fallbackUrl="/llm-responses" label="Back to Responses" />
         </div>
 
-        <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">LLM Response Details</h1>
-            <p className="text-sm text-gray-500 font-mono mt-1">ID: {response.id}</p>
+        <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 transition-colors">
+          <div className="bg-gray-50 dark:bg-gray-900/50 px-6 py-4 border-b border-gray-200 dark:border-gray-700 transition-colors">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">LLM Response Details</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-mono mt-1">ID: {response.id}</p>
           </div>
 
-          <div className="p-6 space-y-8">
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Model ID</label>
+                <div className="mt-1">
+                  <Link
+                    href={`/llm-models/${response.llm_model_id}`}
+                    className="text-lg text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
+                  >
+                    {response.llm_model_id}
+                  </Link>
+                </div>
+              </div>
 
-            {/* Metadata Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
               <div>
-                <label className="block text-xs font-medium text-blue-600 uppercase tracking-wider">Model</label>
-                <Link href={`/llm-models/${response.llm_model_id}`} className="text-blue-900 font-mono font-bold hover:underline">
-                  ID: {response.llm_model_id}
-                </Link>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Processing Time</label>
+                <p className="mt-1 text-lg text-gray-900 dark:text-white">{response.processing_time_seconds} seconds</p>
               </div>
+
               <div>
-                <label className="block text-xs font-medium text-blue-600 uppercase tracking-wider">Temperature</label>
-                <p className="text-blue-900 font-mono font-bold">{response.llm_temperature ?? 'N/A'}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-blue-600 uppercase tracking-wider">Processing Time</label>
-                <p className="text-blue-900 font-mono font-bold">{response.processing_time_seconds}s</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-blue-600 uppercase tracking-wider">Created</label>
-                <p className="text-blue-900 text-sm">{new Date(response.created_datetime_utc).toLocaleString()}</p>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Created At</label>
+                <p className="mt-1 text-lg text-gray-900 dark:text-white">
+                  {new Date(response.created_datetime_utc).toLocaleString()}
+                </p>
               </div>
             </div>
 
-            {/* Links Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {response.caption_request_id && (
-                <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                  <label className="block text-xs text-gray-500 uppercase">Caption Request</label>
-                  <Link href={`/caption-requests/${response.caption_request_id}`} className="text-blue-600 hover:underline text-sm font-medium">
-                    View Request #{response.caption_request_id}
-                  </Link>
-                </div>
-              )}
-              {response.llm_prompt_chain_id && (
-                <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                  <label className="block text-xs text-gray-500 uppercase">Prompt Chain</label>
-                  <Link href={`/prompt-chains/${response.llm_prompt_chain_id}`} className="text-blue-600 hover:underline text-sm font-medium">
-                    View Chain #{response.llm_prompt_chain_id}
-                  </Link>
-                </div>
-              )}
-              {response.humor_flavor_id && (
-                <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                  <label className="block text-xs text-gray-500 uppercase">Humor Flavor</label>
-                  <Link href={`/humor-flavors/${response.humor_flavor_id}`} className="text-blue-600 hover:underline text-sm font-medium">
-                    View Flavor #{response.humor_flavor_id}
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Generated Output */}
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Output</span>
-                Generated Captions
-              </h3>
-              {parsedCaptions.length > 0 ? (
-                <ul className="space-y-2">
-                  {parsedCaptions.map((caption, idx) => (
-                    <li key={idx} className="p-4 bg-green-50 border border-green-100 rounded-lg text-green-900 font-medium">
-                      "{caption}"
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <pre className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono whitespace-pre-wrap">
-                  {response.llm_model_response}
-                </pre>
-              )}
-            </div>
-
-            {/* Prompts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3">System Prompt</h3>
-                <div className="bg-gray-900 rounded-lg p-4 h-96 overflow-y-auto border border-gray-700 shadow-inner">
-                  <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
-                    {response.llm_system_prompt || 'No system prompt'}
-                  </pre>
+            {/* Extracted Metadata Section */}
+            {(usage || finishReason) && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 transition-colors">
+                <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-400 uppercase tracking-wider mb-3">Response Metadata</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {usage && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-medium text-blue-600 dark:text-blue-500">Prompt Tokens</label>
+                        <p className="text-blue-900 dark:text-blue-300 font-mono text-lg">{usage.prompt_tokens || '-'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-blue-600 dark:text-blue-500">Completion Tokens</label>
+                        <p className="text-blue-900 dark:text-blue-300 font-mono text-lg">{usage.completion_tokens || '-'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-blue-600 dark:text-blue-500">Total Tokens</label>
+                        <p className="text-blue-900 dark:text-blue-300 font-mono text-lg font-bold">{usage.total_tokens || '-'}</p>
+                      </div>
+                    </>
+                  )}
+                  {finishReason && (
+                    <div>
+                      <label className="block text-xs font-medium text-blue-600 dark:text-blue-500">Finish Reason</label>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 mt-1 transition-colors">
+                        {finishReason}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
+            )}
 
+            <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3">User Prompt</h3>
-                <div className="bg-gray-900 rounded-lg p-4 h-96 overflow-y-auto border border-gray-700 shadow-inner">
-                  <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">User Prompt</label>
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 overflow-x-auto transition-colors">
+                  <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono">
                     {response.llm_user_prompt}
                   </pre>
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Model Output</label>
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 overflow-x-auto transition-colors">
+                  {parsedResponse ? (
+                    // If it was JSON, show pretty printed JSON or the 'text' field if available
+                    <div className="space-y-4">
+                      {parsedResponse.choices?.[0]?.message?.content && (
+                        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Extracted Content</p>
+                          <pre className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap font-sans">
+                            {parsedResponse.choices[0].message.content}
+                          </pre>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Full Response Object</p>
+                        <pre className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap font-mono">
+                          {JSON.stringify(parsedResponse, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+                  ) : (
+                    <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono">
+                      {response.llm_model_response}
+                    </pre>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Raw JSON Toggle (Optional details) */}
-            <details className="group">
-              <summary className="cursor-pointer text-sm font-medium text-gray-500 hover:text-gray-700 flex items-center gap-2 select-none">
-                <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-                View Full Raw Data
-              </summary>
-              <div className="mt-4">
-                <pre className="bg-gray-100 text-gray-800 p-4 rounded-lg overflow-x-auto text-xs">
-                  {JSON.stringify(response, null, 2)}
-                </pre>
-              </div>
-            </details>
-
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Raw DB Record</h3>
+              <pre className="bg-gray-900 text-gray-100 dark:bg-gray-950 dark:text-gray-300 p-4 rounded-lg overflow-x-auto text-sm transition-colors">
+                {JSON.stringify(response, null, 2)}
+              </pre>
+            </div>
           </div>
         </div>
       </div>

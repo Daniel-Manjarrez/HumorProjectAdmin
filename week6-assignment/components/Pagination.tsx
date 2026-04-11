@@ -124,27 +124,27 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4 rounded-lg shadow-sm">
+    <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 sm:px-6 mt-4 rounded-lg shadow-sm transition-colors">
       <div className="flex flex-1 justify-between sm:hidden">
         <button
           onClick={() => handlePageChange(page - 1)}
           disabled={page <= 1}
-          className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors ${page <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`relative inline-flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${page <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           Previous
         </button>
         <button
           onClick={() => handlePageChange(page + 1)}
           disabled={!hasNextPage}
-          className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors ${!hasNextPage ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${!hasNextPage ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           Next
         </button>
       </div>
       <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm text-gray-700">
-            Showing page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+          <p className="text-sm text-gray-700 dark:text-gray-400">
+            Showing page <span className="font-medium text-gray-900 dark:text-white">{page}</span> of <span className="font-medium text-gray-900 dark:text-white">{totalPages}</span>
           </p>
         </div>
         <div>
@@ -152,7 +152,7 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1}
-              className={`relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors ${page <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 dark:text-gray-500 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 transition-colors ${page <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span className="sr-only">Previous</span>
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -165,7 +165,7 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={!hasNextPage}
-              className={`relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors ${!hasNextPage ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 dark:text-gray-500 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 transition-colors ${!hasNextPage ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span className="sr-only">Next</span>
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
