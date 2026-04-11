@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 type Props = {
   page: number;
@@ -11,13 +11,14 @@ type Props = {
 export default function Pagination({ page, totalPages, hasNextPage }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
 
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', newPage.toString());
-    router.replace(`?${params.toString()}`);
+    router.replace(`${pathname}?${params.toString()}`);
   };
 
   const renderPageNumbers = () => {
@@ -40,7 +41,7 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
         <button
           key="jump-back-10"
           onClick={() => handlePageChange(Math.max(1, page - 10))}
-          className="relative inline-flex items-center px-3 py-2 text-sm font-semibold text-gray-500 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors"
+          className="relative inline-flex items-center px-3 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 transition-colors"
           title="Jump back 10 pages"
         >
           -10
@@ -54,14 +55,14 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
         <button
           key="first"
           onClick={() => handlePageChange(1)}
-          className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors"
+          className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 transition-colors"
         >
           1
         </button>
       );
       if (startPage > 2) {
         pageElements.push(
-          <span key="ellipsis-start" className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300">
+          <span key="ellipsis-start" className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-600">
             ...
           </span>
         );
@@ -73,10 +74,10 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
         <button
           key={i}
           onClick={() => handlePageChange(i)}
-          className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0 transition-colors
+          className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:z-20 focus:outline-offset-0 transition-colors
             ${i === page
-              ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
-              : 'text-gray-900 hover:bg-gray-50'
+              ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-blue-400'
+              : 'text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
         >
           {i}
@@ -88,7 +89,7 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
     if (endPage < totalPages) {
       if (endPage < totalPages - 1) {
         pageElements.push(
-          <span key="ellipsis-end" className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300">
+          <span key="ellipsis-end" className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-600">
             ...
           </span>
         );
@@ -97,7 +98,7 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
         <button
           key="last"
           onClick={() => handlePageChange(totalPages)}
-          className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors"
+          className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 transition-colors"
         >
           {totalPages}
         </button>
@@ -110,7 +111,7 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
         <button
           key="jump-forward-10"
           onClick={() => handlePageChange(Math.min(totalPages, page + 10))}
-          className="relative inline-flex items-center px-3 py-2 text-sm font-semibold text-gray-500 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors"
+          className="relative inline-flex items-center px-3 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 transition-colors"
           title="Jump forward 10 pages"
         >
           +10
