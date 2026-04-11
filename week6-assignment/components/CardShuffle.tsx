@@ -6,15 +6,16 @@ type StatCard = {
   title: string;
   value: number | string;
   description: string;
-  color: 'blue' | 'green' | 'purple' | 'red' | 'yellow';
+  color: 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'pink';
 };
 
 const colorMap = {
-  blue: 'text-blue-600',
-  green: 'text-green-600',
-  purple: 'text-purple-600',
-  red: 'text-red-600',
-  yellow: 'text-yellow-600',
+  blue: 'text-blue-600 dark:text-blue-400',
+  green: 'text-green-600 dark:text-green-400',
+  purple: 'text-purple-600 dark:text-purple-400',
+  red: 'text-red-600 dark:text-red-400',
+  yellow: 'text-yellow-600 dark:text-yellow-400',
+  pink: 'text-pink-600 dark:text-pink-400',
 };
 
 export default function CardShuffle({ stats }: { stats: StatCard[] }) {
@@ -86,7 +87,7 @@ export default function CardShuffle({ stats }: { stats: StatCard[] }) {
   if (stats.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-center justify-center h-96 bg-gray-100 rounded-xl p-8 relative overflow-hidden perspective-1000">
+    <div className="flex flex-col items-center justify-center h-96 bg-gray-100 dark:bg-gray-900 rounded-xl p-8 relative overflow-hidden perspective-1000 transition-colors">
 
       <div className="relative w-full h-full flex items-center justify-center" style={{ perspective: '1000px' }}>
         {stats.map((card, index) => {
@@ -124,22 +125,22 @@ export default function CardShuffle({ stats }: { stats: StatCard[] }) {
                 >
                   {/* Front */}
                   <div
-                    className="absolute inset-0 w-full h-full bg-white rounded-2xl shadow-2xl flex flex-col items-center justify-center p-6 text-center border border-gray-100 backface-hidden"
+                    className="absolute inset-0 w-full h-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col items-center justify-center p-6 text-center border border-gray-100 dark:border-gray-700 backface-hidden transition-colors"
                     style={{ backfaceVisibility: 'hidden' }}
                   >
-                    <h3 className="text-2xl font-bold text-gray-800 mb-4">{card.title}</h3>
-                    <p className={`text-5xl font-extrabold ${colorMap[card.color]}`}>
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">{card.title}</h3>
+                    <p className={`text-4xl font-extrabold ${colorMap[card.color]}`}>
                       {card.value}
                     </p>
-                    {isCenter && <p className="mt-4 text-sm text-gray-400">Click to flip</p>}
+                    {isCenter && <p className="mt-4 text-sm text-gray-400 dark:text-gray-500">Click to flip</p>}
                   </div>
 
                   {/* Back */}
                   <div
-                    className="absolute inset-0 w-full h-full bg-gray-800 text-white rounded-2xl shadow-2xl flex flex-col items-center justify-center p-6 text-center backface-hidden"
+                    className="absolute inset-0 w-full h-full bg-gray-800 dark:bg-gray-950 text-white rounded-2xl shadow-2xl flex flex-col items-center justify-center p-6 text-center backface-hidden transition-colors border border-gray-700"
                     style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                   >
-                    <p className="text-lg font-medium leading-relaxed">
+                    <p className="text-lg font-medium leading-relaxed text-gray-200">
                       {card.description}
                     </p>
                   </div>
@@ -153,7 +154,7 @@ export default function CardShuffle({ stats }: { stats: StatCard[] }) {
       <div className="flex justify-between w-full max-w-md mt-8 absolute bottom-4 px-8 z-30 pointer-events-none">
         <button
           onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-          className="bg-gray-800 text-white p-4 rounded-full shadow-lg hover:bg-gray-700 hover:scale-110 transition-all pointer-events-auto"
+          className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 p-4 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-110 transition-all pointer-events-auto"
           aria-label="Previous"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,18 +162,18 @@ export default function CardShuffle({ stats }: { stats: StatCard[] }) {
           </svg>
         </button>
 
-        <div className="flex gap-2 items-center pointer-events-auto bg-white/50 px-4 py-2 rounded-full backdrop-blur-sm">
+        <div className="flex gap-2 items-center pointer-events-auto bg-white/80 dark:bg-gray-800/80 px-4 py-2 rounded-full backdrop-blur-sm border border-gray-200 dark:border-gray-700">
           {stats.map((_, idx) => (
             <div
               key={idx}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-blue-600 w-4' : 'bg-gray-400'}`}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-blue-600 dark:bg-blue-400 w-4' : 'bg-gray-300 dark:bg-gray-600'}`}
             />
           ))}
         </div>
 
         <button
           onClick={(e) => { e.stopPropagation(); handleNext(); }}
-          className="bg-gray-800 text-white p-4 rounded-full shadow-lg hover:bg-gray-700 hover:scale-110 transition-all pointer-events-auto"
+          className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 p-4 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-110 transition-all pointer-events-auto"
           aria-label="Next"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
