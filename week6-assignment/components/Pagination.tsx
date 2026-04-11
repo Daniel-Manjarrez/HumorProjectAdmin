@@ -13,9 +13,112 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
   const searchParams = useSearchParams();
 
   const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', newPage.toString());
     router.replace(`?${params.toString()}`);
+  };
+
+  const renderPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+    let endPage = startPage + maxVisiblePages - 1;
+
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    const pageElements = [];
+
+    // Jump back by 10
+    if (page > 10) {
+      pageElements.push(
+        <button
+          key="jump-back-10"
+          onClick={() => handlePageChange(Math.max(1, page - 10))}
+          className="relative inline-flex items-center px-3 py-2 text-sm font-semibold text-gray-500 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors"
+          title="Jump back 10 pages"
+        >
+          -10
+        </button>
+      );
+    }
+
+    // Add first page and ellipsis if needed
+    if (startPage > 1) {
+      pageElements.push(
+        <button
+          key="first"
+          onClick={() => handlePageChange(1)}
+          className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors"
+        >
+          1
+        </button>
+      );
+      if (startPage > 2) {
+        pageElements.push(
+          <span key="ellipsis-start" className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300">
+            ...
+          </span>
+        );
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pageElements.push(
+        <button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0 transition-colors
+            ${i === page
+              ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+              : 'text-gray-900 hover:bg-gray-50'
+            }`}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    // Add last page and ellipsis if needed
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        pageElements.push(
+          <span key="ellipsis-end" className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300">
+            ...
+          </span>
+        );
+      }
+      pageElements.push(
+        <button
+          key="last"
+          onClick={() => handlePageChange(totalPages)}
+          className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors"
+        >
+          {totalPages}
+        </button>
+      );
+    }
+
+    // Jump forward by 10
+    if (page + 10 <= totalPages) {
+      pageElements.push(
+        <button
+          key="jump-forward-10"
+          onClick={() => handlePageChange(Math.min(totalPages, page + 10))}
+          className="relative inline-flex items-center px-3 py-2 text-sm font-semibold text-gray-500 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors"
+          title="Jump forward 10 pages"
+        >
+          +10
+        </button>
+      );
+    }
+
+    return <>{pageElements}</>;
   };
 
   if (totalPages <= 1) return null;
@@ -26,14 +129,14 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
         <button
           onClick={() => handlePageChange(page - 1)}
           disabled={page <= 1}
-          className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${page <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors ${page <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           Previous
         </button>
         <button
           onClick={() => handlePageChange(page + 1)}
           disabled={!hasNextPage}
-          className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${!hasNextPage ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors ${!hasNextPage ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           Next
         </button>
@@ -49,7 +152,7 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1}
-              className={`relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${page <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors ${page <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span className="sr-only">Previous</span>
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -57,15 +160,12 @@ export default function Pagination({ page, totalPages, hasNextPage }: Props) {
               </svg>
             </button>
 
-            {/* Page Numbers (Simplified) */}
-            <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:outline-offset-0">
-              {page}
-            </span>
+            {renderPageNumbers()}
 
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={!hasNextPage}
-              className={`relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${!hasNextPage ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 transition-colors ${!hasNextPage ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span className="sr-only">Next</span>
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
