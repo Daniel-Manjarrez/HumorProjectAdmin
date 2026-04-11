@@ -65,15 +65,15 @@ export default async function ImagesPage({ searchParams }: { searchParams: Promi
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <Link href="/" className="text-blue-600 hover:text-blue-800 flex items-center gap-2">
+          <Link href="/" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-2">
             ← Back to Dashboard
           </Link>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Manage Images</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Manage Images</h1>
 
         <AdvancedFilter columns={columns} />
 
